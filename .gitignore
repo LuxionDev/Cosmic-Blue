@@ -1,4 +1,13 @@
+.idea/
+.vscode/
+*.iml
+
 cosign.key
+_build
 _build_*
-output
-_build-*/**
+output/
+previous.manifest.json
+changelog.md
+output.env
+.DS_Store
+Thumbs.db

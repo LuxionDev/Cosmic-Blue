@@ -128,7 +128,7 @@ The [Containerfile](./Containerfile) defines the operations used to customize th
 
 ## build.sh
 
-The [build.sh](./build_files/build.sh) file is called from your Containerfile. It is the best place to install new packages or make any other customization to your system. There are customization examples contained within it for your perusal.
+The [build.sh](build_files/00-build.sh) file is called from your Containerfile. It is the best place to install new packages or make any other customization to your system. There are customization examples contained within it for your perusal.
 
 ## build.yml
 
@@ -136,7 +136,7 @@ The [build.yml](./.github/workflows/build.yml) Github Actions workflow creates y
 
 # Building Disk Images
 
-This template provides an out of the box workflow for creating disk images (ISO, qcow, raw) for your custom OCI image which can be used to directly install onto your machines.
+This template provides an out-of-the-box workflow for creating disk images (ISO, qcow, raw) for your custom OCI image which can be used to directly install onto your machines.
 
 This template provides a way to upload the disk images that is generated from the workflow to a S3 bucket. The disk images will also be available as an artifact from the job, if you wish to use an alternate provider. To upload to S3 we use [rclone](https://rclone.org/) which is able to use [many S3 providers](https://rclone.org/s3/).
 

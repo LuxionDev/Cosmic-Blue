@@ -1,0 +1,11 @@
+* text=auto eol=lf
+
+*.yml linguist-detectable=true linguist-language=YAML
+*.yaml linguist-detectable=true linguist-language=YAML
+*.just linguist-detectable=true linguist-documentation=false linguist-language=Just
+*.json linguist-detectable=true linguist-documentation=false linguist-language=JSON
+Containerfile* linguist-language=Containerfile
+
+*.sh text eol=lf
+Justfile text eol=lf
+cosign.pub text eol=lf
