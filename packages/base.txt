@@ -1,4 +1,3 @@
 # Keep host image intentionally thin.
 tmux
 zsh
-starship

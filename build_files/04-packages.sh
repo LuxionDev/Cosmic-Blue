@@ -1,16 +1,15 @@
-#!/bin/bash
+#!/usr/bin/bash
+
+echo "::group:: ===$(basename "$0")==="
 
 set -ouex pipefail
 
-PACKAGE_FILE="/ctx/packages/base.txt"
+# All DNF-related operations should be done here whenever possible.
+# Cosmic-Blue keeps package intent in /ctx/packages/*.txt, then installs in bulk.
 
-if [[ ! -f "${PACKAGE_FILE}" ]]; then
-    echo "Missing packages list: ${PACKAGE_FILE}" >&2
-    exit 1
-fi
+readarray -t FEDORA_PACKAGES < <(grep -Ev '^\s*($|#)' /ctx/packages/base.txt)
 
-mapfile -t PKGS < <(grep -Ev '^\s*($|#)' "${PACKAGE_FILE}")
+echo "Installing ${#FEDORA_PACKAGES[@]} packages from Fedora repos..."
+dnf5 -y install "${FEDORA_PACKAGES[@]}"
 
-if [[ "${#PKGS[@]}" -gt 0 ]]; then
-    dnf5 install -y "${PKGS[@]}"
-fi
+echo "::endgroup::"
