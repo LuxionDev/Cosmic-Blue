@@ -1,0 +1,17 @@
+# Phase 2: COSMIC desktop-core-only (curated explicit list)
+#
+# Included categories for Phase 2:
+# 1) Required session packages
+# 2) Required runtime/session-support packages
+#
+# Deferred categories (NOT installed in Phase 2):
+# - COSMIC apps and broader UX components (for example: cosmic-store, cosmic-edit)
+# - Fedora COSMIC identity/release packages (fedora-release-cosmic-atomic*, fedora-release-identity-cosmic*)
+# - Any display-manager/session-default reconfiguration
+
+# 1) Required session packages
+cosmic-session
+
+# 2) Required runtime/session-support packages
+xdg-desktop-portal
+xdg-desktop-portal-cosmic
