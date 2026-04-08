@@ -2,6 +2,7 @@
 FROM scratch AS ctx
 COPY build_files /
 COPY packages /packages
+COPY scripts /scripts
 
 # Base Image
 FROM ghcr.io/ublue-os/base-main:latest

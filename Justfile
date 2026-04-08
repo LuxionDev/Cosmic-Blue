@@ -317,3 +317,22 @@ format:
     fi
     # Run shfmt on all Bash scripts
     /usr/bin/find . -iname "*.sh" -type f -exec shfmt --write "{}" ';'
+
+# Cosmic-Blue helper tasks
+[group('Cosmic-Blue')]
+show-tree:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    find build_files packages flatpaks scripts system_files -maxdepth 2 -print | sort
+
+[group('Cosmic-Blue')]
+run-bootstrap-user:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    bash scripts/bootstrap-user.sh
+
+[group('Cosmic-Blue')]
+smoke-test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    bash scripts/smoke-test.sh
