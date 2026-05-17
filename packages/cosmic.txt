@@ -15,3 +15,6 @@ cosmic-session
 # 2) Required runtime/session-support packages
 xdg-desktop-portal
 xdg-desktop-portal-cosmic
+
+# 3) Minimal editor addition
+cosmic-edit
