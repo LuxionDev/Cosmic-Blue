@@ -1,5 +1,6 @@
 export image_name := env("IMAGE_NAME", "image-template") # output image name, usually same as repo name, change as needed
 export default_tag := env("DEFAULT_TAG", "latest")
+export default_gpu_profile := env("GPU_PROFILE", "none")
 export bib_image := env("BIB_IMAGE", "quay.io/centos-bootc/bootc-image-builder:latest")
 
 alias build-vm := build-qcow2
@@ -86,19 +87,24 @@ sudoif command *args:
 #
 
 # Build the image using the specified parameters
-build $target_image=image_name $tag=default_tag:
+build $target_image=image_name $tag=default_tag $gpu_profile=default_gpu_profile:
     #!/usr/bin/env bash
 
     BUILD_ARGS=()
     if [[ -z "$(git status -s)" ]]; then
         BUILD_ARGS+=("--build-arg" "SHA_HEAD_SHORT=$(git rev-parse --short HEAD)")
     fi
+    BUILD_ARGS+=("--build-arg" "GPU_PROFILE={{ gpu_profile }}")
 
     podman build \
         "${BUILD_ARGS[@]}" \
         --pull=newer \
         --tag "${target_image}:${tag}" \
         .
+
+[group('Build Container Image')]
+build-nvidia $target_image=image_name $tag=(default_tag + "-nvidia"):
+    just build "{{ target_image }}" "{{ tag }}" "nvidia-open"
 
 # Command: _rootful_load_image
 # Description: This script checks if the current user is root or running under sudo. If not, it attempts to resolve the image tag using podman inspect.
@@ -195,7 +201,12 @@ _build-bib $target_image $tag $type $config: (_rootful_load_image target_image t
 #   config: The configuration file to use for the build (deafult: disk_config/disk.toml)
 
 # Example: just _rebuild-bib localhost/fedora latest qcow2 disk_config/disk.toml
-_rebuild-bib $target_image $tag $type $config: (build target_image tag) && (_build-bib target_image tag type config)
+_rebuild-bib $target_image $tag $type $config $gpu_profile:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    just build "{{ target_image }}" "{{ tag }}" "{{ gpu_profile }}"
+    just _build-bib "{{ target_image }}" "{{ tag }}" "{{ type }}" "{{ config }}"
 
 # Build a QCOW2 virtual machine image
 [group('Build Virtal Machine Image')]
@@ -211,15 +222,18 @@ build-iso $target_image=("localhost/" + image_name) $tag=default_tag: && (_build
 
 # Rebuild a QCOW2 virtual machine image
 [group('Build Virtal Machine Image')]
-rebuild-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag: && (_rebuild-bib target_image tag "qcow2" "disk_config/disk.toml")
+rebuild-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag $gpu_profile=default_gpu_profile:
+    just _rebuild-bib "{{ target_image }}" "{{ tag }}" "qcow2" "disk_config/disk.toml" "{{ gpu_profile }}"
 
 # Rebuild a RAW virtual machine image
 [group('Build Virtal Machine Image')]
-rebuild-raw $target_image=("localhost/" + image_name) $tag=default_tag: && (_rebuild-bib target_image tag "raw" "disk_config/disk.toml")
+rebuild-raw $target_image=("localhost/" + image_name) $tag=default_tag $gpu_profile=default_gpu_profile:
+    just _rebuild-bib "{{ target_image }}" "{{ tag }}" "raw" "disk_config/disk.toml" "{{ gpu_profile }}"
 
 # Rebuild an ISO virtual machine image
 [group('Build Virtal Machine Image')]
-rebuild-iso $target_image=("localhost/" + image_name) $tag=default_tag: && (_rebuild-bib target_image tag "iso" "disk_config/iso.toml")
+rebuild-iso $target_image=("localhost/" + image_name) $tag=default_tag $gpu_profile=default_gpu_profile:
+    just _rebuild-bib "{{ target_image }}" "{{ tag }}" "iso" "disk_config/iso.toml" "{{ gpu_profile }}"
 
 # Run a virtual machine with the specified image type and configuration
 _run-vm $target_image $tag $type $config:
@@ -292,7 +306,6 @@ spawn-vm rebuild="0" type="qcow2" ram="6G":
       --network-user-mode \
       --vsock=false --pass-ssh-key=false \
       -i ./output/**/*.{{ type }}
-
 
 # Runs shell check on all Bash scripts
 lint:

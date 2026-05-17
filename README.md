@@ -184,12 +184,25 @@ To use it, you must have installed [just](https://just.systems/man/en/introducti
 Builds a container image using Podman.
 
 ```bash
-just build $target_image $tag
+just build $target_image $tag $gpu_profile
 ```
 
 Arguments:
 - `$target_image`: The tag you want to apply to the image (default: `$image_name`).
 - `$tag`: The tag for the image (default: `$default_tag`).
+- `$gpu_profile`: GPU profile selector (default: `none`, supported: `none`, `nvidia-open`).
+
+Example NVIDIA build:
+
+```bash
+just build localhost/image-template latest-nvidia nvidia-open
+```
+
+Convenience wrapper:
+
+```bash
+just build-nvidia
+```
 
 ## Building and Running Virtual Machines and ISOs
 

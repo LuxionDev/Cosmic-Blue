@@ -1,0 +1,14 @@
+# Phase 3: NVIDIA support profile
+#
+# This manifest is only applied when GPU_PROFILE=nvidia-open.
+# Keep the list narrow and let package dependencies pull the rest of the
+# userspace/kernel support stack required by the current Fedora/uBlue base.
+#
+# Modern supported target class:
+# - GeForce RTX 50/40/30/20
+# - GeForce 16 series
+# - and other hardware supported by NVIDIA's open kernel module
+
+akmod-nvidia-open
+xorg-x11-drv-nvidia
+xorg-x11-drv-nvidia-cuda
