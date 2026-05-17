@@ -17,6 +17,7 @@ done
 command -v starship >/dev/null 2>&1
 starship --version >/dev/null 2>&1
 systemctl is-enabled podman.socket >/dev/null
+systemctl is-enabled cosmic-greeter.service >/dev/null
 
 test -f /usr/share/wayland-sessions/cosmic.desktop
 rpm -q xdg-desktop-portal-cosmic >/dev/null 2>&1

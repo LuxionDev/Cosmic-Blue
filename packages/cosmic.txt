@@ -1,13 +1,15 @@
-# Phase 2: COSMIC desktop-core-only (curated explicit list)
+# Phase 2: Curated COSMIC session layer
 #
 # Included categories for Phase 2:
-# 1) Required session packages
+# 1) Required session package set
 # 2) Required runtime/session-support packages
+# 3) Minimal host-native editor
+# 4) COSMIC greeter enablement when pulled by the Fedora COSMIC session stack
 #
 # Deferred categories (NOT installed in Phase 2):
-# - COSMIC apps and broader UX components (for example: cosmic-store, cosmic-edit)
+# - Broader COSMIC app expansion beyond the curated set below (for example: cosmic-store)
 # - Fedora COSMIC identity/release packages (fedora-release-cosmic-atomic*, fedora-release-identity-cosmic*)
-# - Any display-manager/session-default reconfiguration
+# - Additional display-manager customization beyond the default COSMIC greeter path
 
 # 1) Required session packages
 cosmic-session

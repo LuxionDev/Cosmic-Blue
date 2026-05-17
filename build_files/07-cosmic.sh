@@ -6,7 +6,7 @@ set -ouex pipefail
 
 readarray -t COSMIC_PACKAGES < <(grep -Ev '^\s*($|#)' /ctx/packages/cosmic.txt)
 
-echo "Installing ${#COSMIC_PACKAGES[@]} COSMIC desktop-core packages..."
+echo "Installing ${#COSMIC_PACKAGES[@]} curated COSMIC packages..."
 dnf5 -y install "${COSMIC_PACKAGES[@]}"
 
 echo "::endgroup::"
