@@ -51,8 +51,21 @@ jobs:
           echo "DEFAULT_TAG=${{ matrix.flavor.default_tag }}" >> ${GITHUB_ENV}
           if [[ "${{ matrix.flavor.image_flavor }}" == "main" ]]; then
             echo "IMAGE_NAME_FULL=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
+            echo "AKMODS_FLAVOR=main" >> ${GITHUB_ENV}
+            echo "KERNEL=" >> ${GITHUB_ENV}
           else
             echo "IMAGE_NAME_FULL=${IMAGE_NAME,,}-${{ matrix.flavor.image_flavor }}" >> ${GITHUB_ENV}
+            echo "AKMODS_FLAVOR=${{ matrix.flavor.image_flavor }}" >> ${GITHUB_ENV}
+          fi
+
+      - name: Resolve upstream build inputs
+        run: |
+          FEDORA_MAJOR_VERSION=$(skopeo inspect --retry-times 3 docker://ghcr.io/ublue-os/base-main:${DEFAULT_TAG} | jq -r '.Labels["org.opencontainers.image.version"]' | grep -oP '^[0-9]+')
+          echo "FEDORA_MAJOR_VERSION=${FEDORA_MAJOR_VERSION}" >> ${GITHUB_ENV}
+
+          if [[ "${{ matrix.flavor.image_flavor }}" != "main" ]]; then
+            KERNEL=$(skopeo inspect --retry-times 3 docker://ghcr.io/ublue-os/akmods:${AKMODS_FLAVOR}-${FEDORA_MAJOR_VERSION} | jq -r '.Labels["ostree.linux"]')
+            echo "KERNEL=${KERNEL}" >> ${GITHUB_ENV}
           fi
 
       # These stage versions are pinned by https://github.com/renovatebot/renovate
@@ -118,8 +131,10 @@ jobs:
           labels: ${{ steps.metadata.outputs.labels }}
           build-args: |
             IMAGE_FLAVOR=${{ matrix.flavor.image_flavor }}
-            AKMODS_FLAVOR=${{ matrix.flavor.image_flavor }}
+            AKMODS_FLAVOR=${{ env.AKMODS_FLAVOR }}
+            FEDORA_MAJOR_VERSION=${{ env.FEDORA_MAJOR_VERSION }}
             IMAGE_NAME=${{ env.IMAGE_NAME_FULL }}
+            KERNEL=${{ env.KERNEL }}
             UBLUE_IMAGE_TAG=${{ env.DEFAULT_TAG }}
           oci: false
 

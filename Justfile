@@ -23,6 +23,25 @@ flavored_image_name $base_name=image_name $image_flavor=default_image_flavor:
         echo "{{ base_name }}-{{ image_flavor }}"
     fi
 
+[private]
+fedora_version $tag=default_tag:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    manifest_json=$(mktemp)
+    trap 'rm -f "${manifest_json}"' EXIT
+
+    skopeo inspect --retry-times 3 "docker://ghcr.io/ublue-os/base-main:{{ tag }}" > "${manifest_json}"
+    jq -r '.Labels["org.opencontainers.image.version"]' < "${manifest_json}" | grep -oP '^[0-9]+'
+
+[private]
+kernel_release $tag=default_tag $akmods_flavor=default_akmods_flavor:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    fedora_version=$({{ just }} fedora_version "{{ tag }}")
+    skopeo inspect --retry-times 3 "docker://ghcr.io/ublue-os/akmods:{{ akmods_flavor }}-${fedora_version}" | jq -r '.Labels["ostree.linux"]'
+
 # Check Just Syntax
 [group('Just')]
 check:
@@ -104,14 +123,24 @@ build $target_image=image_name $tag=default_tag $image_flavor=default_image_flav
 
     BUILD_ARGS=()
     RESOLVED_IMAGE_NAME=$(just flavored_image_name "{{ target_image }}" "{{ image_flavor }}")
+    AKMODS_FLAVOR="{{ image_flavor }}"
+    FEDORA_MAJOR_VERSION=$(just fedora_version "{{ tag }}")
+
+    if [[ "{{ image_flavor }}" == "main" ]]; then
+        KERNEL_RELEASE=""
+    else
+        KERNEL_RELEASE=$(just kernel_release "{{ tag }}" "${AKMODS_FLAVOR}")
+    fi
 
     if [[ -z "$(git status -s)" ]]; then
         BUILD_ARGS+=("--build-arg" "SHA_HEAD_SHORT=$(git rev-parse --short HEAD)")
     fi
     BUILD_ARGS+=("--build-arg" "IMAGE_FLAVOR={{ image_flavor }}")
-    BUILD_ARGS+=("--build-arg" "AKMODS_FLAVOR={{ image_flavor }}")
+    BUILD_ARGS+=("--build-arg" "AKMODS_FLAVOR=${AKMODS_FLAVOR}")
     BUILD_ARGS+=("--build-arg" "BASE_IMAGE_NAME=base-main")
+    BUILD_ARGS+=("--build-arg" "FEDORA_MAJOR_VERSION=${FEDORA_MAJOR_VERSION}")
     BUILD_ARGS+=("--build-arg" "IMAGE_NAME=${RESOLVED_IMAGE_NAME}")
+    BUILD_ARGS+=("--build-arg" "KERNEL=${KERNEL_RELEASE}")
     BUILD_ARGS+=("--build-arg" "UBLUE_IMAGE_TAG={{ tag }}")
 
     podman build \
