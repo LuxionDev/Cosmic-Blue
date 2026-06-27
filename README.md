@@ -192,6 +192,10 @@ Arguments:
 - `$tag`: The tag for the image (default: `$default_tag`).
 - `$image_flavor`: Image flavor selector (default: `main`, current supported build path: `main`).
 
+Flavor naming follows the Bluefin-style pattern:
+- `main` builds and publishes as the base image name
+- non-`main` flavors build and publish as `<image-name>-<flavor>`
+
 Current default build:
 
 ```bash

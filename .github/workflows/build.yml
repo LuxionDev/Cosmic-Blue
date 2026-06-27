@@ -49,6 +49,11 @@ jobs:
           echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> ${GITHUB_ENV}
           echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
           echo "DEFAULT_TAG=${{ matrix.flavor.default_tag }}" >> ${GITHUB_ENV}
+          if [[ "${{ matrix.flavor.image_flavor }}" == "main" ]]; then
+            echo "IMAGE_NAME_FULL=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
+          else
+            echo "IMAGE_NAME_FULL=${IMAGE_NAME,,}-${{ matrix.flavor.image_flavor }}" >> ${GITHUB_ENV}
+          fi
 
       # These stage versions are pinned by https://github.com/renovatebot/renovate
       - name: Checkout
@@ -108,12 +113,13 @@ jobs:
             ./Containerfile
           # Postfix image name with -custom to make it a little more descriptive
           # Syntax: https://docs.github.com/en/actions/learn-github-actions/expressions#format
-          image: ${{ env.IMAGE_NAME }}
+          image: ${{ env.IMAGE_NAME_FULL }}
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
           build-args: |
             IMAGE_FLAVOR=${{ matrix.flavor.image_flavor }}
             AKMODS_FLAVOR=${{ matrix.flavor.image_flavor }}
+            IMAGE_NAME=${{ env.IMAGE_NAME_FULL }}
           oci: false
 
       # Rechunk is a script that we use on Universal Blue to make sure there isnt a single huge layer when your image gets published.
@@ -159,7 +165,7 @@ jobs:
           REGISTRY_PASSWORD: ${{ github.token }}
         with:
           registry: ${{ env.IMAGE_REGISTRY }}
-          image: ${{ env.IMAGE_NAME }}
+          image: ${{ env.IMAGE_NAME_FULL }}
           tags: ${{ steps.metadata.outputs.tags }}
           username: ${{ env.REGISTRY_USER }}
           password: ${{ env.REGISTRY_PASSWORD }}
@@ -177,7 +183,7 @@ jobs:
       - name: Sign container image
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         run: |
-          IMAGE_FULL="${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
+          IMAGE_FULL="${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME_FULL }}"
           for tag in ${{ steps.metadata.outputs.tags }}; do
             cosign sign -y --key env://COSIGN_PRIVATE_KEY $IMAGE_FULL:$tag
           done

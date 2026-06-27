@@ -12,6 +12,17 @@ alias run-vm := run-vm-qcow2
 default:
     @just --list
 
+[private]
+flavored_image_name $base_name=image_name $image_flavor=default_image_flavor:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    if [[ "{{ image_flavor }}" == "main" ]]; then
+        echo "{{ base_name }}"
+    else
+        echo "{{ base_name }}-{{ image_flavor }}"
+    fi
+
 # Check Just Syntax
 [group('Just')]
 check:
@@ -92,20 +103,23 @@ build $target_image=image_name $tag=default_tag $image_flavor=default_image_flav
     #!/usr/bin/env bash
 
     BUILD_ARGS=()
+    RESOLVED_IMAGE_NAME=$(just flavored_image_name "{{ target_image }}" "{{ image_flavor }}")
+
     if [[ -z "$(git status -s)" ]]; then
         BUILD_ARGS+=("--build-arg" "SHA_HEAD_SHORT=$(git rev-parse --short HEAD)")
     fi
     BUILD_ARGS+=("--build-arg" "IMAGE_FLAVOR={{ image_flavor }}")
     BUILD_ARGS+=("--build-arg" "AKMODS_FLAVOR={{ image_flavor }}")
+    BUILD_ARGS+=("--build-arg" "IMAGE_NAME=${RESOLVED_IMAGE_NAME}")
 
     podman build \
         "${BUILD_ARGS[@]}" \
         --pull=newer \
-        --tag "${target_image}:${tag}" \
+        --tag "${RESOLVED_IMAGE_NAME}:${tag}" \
         .
 
 [group('Build Container Image')]
-build-nvidia-open $target_image=image_name $tag=(default_tag + "-nvidia"):
+build-nvidia-open $target_image=image_name $tag=default_tag:
     just build "{{ target_image }}" "{{ tag }}" "nvidia-open"
 
 # Command: _rootful_load_image
