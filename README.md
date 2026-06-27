@@ -206,6 +206,8 @@ Planned NVIDIA flavor work:
 
 `nvidia-open` is being refactored toward a Bluefin-style flavor and akmods-based integration path. The old direct package-install implementation has been removed from this branch because it did not match the upstream model and failed in CI.
 
+The branch now mirrors Bluefin's stage ordering more closely by reserving a kernel/akmods stage before package layering. The actual akmods container consumption for `nvidia-open` is still pending.
+
 ## Building and Running Virtual Machines and ISOs
 
 The below commands all build QCOW2 images. To produce or use a different type of image, substitute in the command with that type in the place of `qcow2`. The available types are `qcow2`, `iso`, and `raw`.
