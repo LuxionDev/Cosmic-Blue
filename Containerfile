@@ -7,8 +7,10 @@ COPY scripts /scripts
 # Base Image
 FROM ghcr.io/ublue-os/base-main:latest
 
+ARG IMAGE_NAME="cosmic-blue"
 ARG IMAGE_FLAVOR=main
 ARG AKMODS_FLAVOR=main
+ARG UBLUE_IMAGE_TAG="latest"
 
 ## Other possible base images include:
 # FROM ghcr.io/ublue-os/bazzite:latest
@@ -38,8 +40,10 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=cache,dst=/var/log \
     --mount=type=tmpfs,dst=/tmp \
+    IMAGE_NAME="${IMAGE_NAME}" \
     IMAGE_FLAVOR="${IMAGE_FLAVOR}" \
     AKMODS_FLAVOR="${AKMODS_FLAVOR}" \
+    UBLUE_IMAGE_TAG="${UBLUE_IMAGE_TAG}" \
     /usr/bin/bash /ctx/00-build.sh
     
 ### LINTING

@@ -111,6 +111,7 @@ build $target_image=image_name $tag=default_tag $image_flavor=default_image_flav
     BUILD_ARGS+=("--build-arg" "IMAGE_FLAVOR={{ image_flavor }}")
     BUILD_ARGS+=("--build-arg" "AKMODS_FLAVOR={{ image_flavor }}")
     BUILD_ARGS+=("--build-arg" "IMAGE_NAME=${RESOLVED_IMAGE_NAME}")
+    BUILD_ARGS+=("--build-arg" "UBLUE_IMAGE_TAG={{ tag }}")
 
     podman build \
         "${BUILD_ARGS[@]}" \
