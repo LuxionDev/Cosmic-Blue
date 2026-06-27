@@ -35,11 +35,26 @@ fedora_version $tag=default_tag:
     jq -r '.Labels["org.opencontainers.image.version"]' < "${manifest_json}" | grep -oP '^[0-9]+'
 
 [private]
+akmods_flavor $tag=default_tag $image_flavor=default_image_flavor:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    if [[ "{{ image_flavor }}" == "main" ]]; then
+        echo "main"
+    elif [[ "{{ tag }}" =~ stable ]]; then
+        echo "coreos-stable"
+    elif [[ "{{ tag }}" =~ beta ]]; then
+        echo "main"
+    else
+        echo "main"
+    fi
+
+[private]
 kernel_release $tag=default_tag $akmods_flavor=default_akmods_flavor:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    fedora_version=$({{ just }} fedora_version "{{ tag }}")
+    fedora_version=$(just fedora_version "{{ tag }}")
     skopeo inspect --retry-times 3 "docker://ghcr.io/ublue-os/akmods:{{ akmods_flavor }}-${fedora_version}" | jq -r '.Labels["ostree.linux"]'
 
 # Check Just Syntax
@@ -123,7 +138,7 @@ build $target_image=image_name $tag=default_tag $image_flavor=default_image_flav
 
     BUILD_ARGS=()
     RESOLVED_IMAGE_NAME=$(just flavored_image_name "{{ target_image }}" "{{ image_flavor }}")
-    AKMODS_FLAVOR="{{ image_flavor }}"
+    AKMODS_FLAVOR=$(just akmods_flavor "{{ tag }}" "{{ image_flavor }}")
     FEDORA_MAJOR_VERSION=$(just fedora_version "{{ tag }}")
 
     if [[ "{{ image_flavor }}" == "main" ]]; then

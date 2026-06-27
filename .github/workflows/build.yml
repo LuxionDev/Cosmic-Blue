@@ -54,15 +54,24 @@ jobs:
           echo "DEFAULT_TAG=${{ matrix.flavor.default_tag }}" >> ${GITHUB_ENV}
           if [[ "${{ matrix.flavor.image_flavor }}" == "main" ]]; then
             echo "IMAGE_NAME_FULL=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
-            echo "AKMODS_FLAVOR=main" >> ${GITHUB_ENV}
             echo "KERNEL=" >> ${GITHUB_ENV}
           else
             echo "IMAGE_NAME_FULL=${IMAGE_NAME,,}-${{ matrix.flavor.image_flavor }}" >> ${GITHUB_ENV}
-            echo "AKMODS_FLAVOR=${{ matrix.flavor.image_flavor }}" >> ${GITHUB_ENV}
           fi
 
       - name: Resolve upstream build inputs
         run: |
+          if [[ "${{ matrix.flavor.image_flavor }}" == "main" ]]; then
+            AKMODS_FLAVOR=main
+          elif [[ "${DEFAULT_TAG}" =~ stable ]]; then
+            AKMODS_FLAVOR=coreos-stable
+          elif [[ "${DEFAULT_TAG}" =~ beta ]]; then
+            AKMODS_FLAVOR=main
+          else
+            AKMODS_FLAVOR=main
+          fi
+          echo "AKMODS_FLAVOR=${AKMODS_FLAVOR}" >> ${GITHUB_ENV}
+
           FEDORA_MAJOR_VERSION=$(skopeo inspect --retry-times 3 docker://ghcr.io/ublue-os/base-main:${DEFAULT_TAG} | jq -r '.Labels["org.opencontainers.image.version"]' | grep -oP '^[0-9]+')
           echo "FEDORA_MAJOR_VERSION=${FEDORA_MAJOR_VERSION}" >> ${GITHUB_ENV}
 
