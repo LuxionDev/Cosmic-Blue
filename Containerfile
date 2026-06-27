@@ -7,7 +7,8 @@ COPY scripts /scripts
 # Base Image
 FROM ghcr.io/ublue-os/base-main:latest
 
-ARG GPU_PROFILE=none
+ARG IMAGE_FLAVOR=main
+ARG AKMODS_FLAVOR=main
 
 ## Other possible base images include:
 # FROM ghcr.io/ublue-os/bazzite:latest
@@ -37,7 +38,9 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=cache,dst=/var/log \
     --mount=type=tmpfs,dst=/tmp \
-    GPU_PROFILE="${GPU_PROFILE}" /usr/bin/bash /ctx/00-build.sh
+    IMAGE_FLAVOR="${IMAGE_FLAVOR}" \
+    AKMODS_FLAVOR="${AKMODS_FLAVOR}" \
+    /usr/bin/bash /ctx/00-build.sh
     
 ### LINTING
 ## Verify final image and contents are correct.

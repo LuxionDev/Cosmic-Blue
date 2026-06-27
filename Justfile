@@ -1,6 +1,7 @@
 export image_name := env("IMAGE_NAME", "image-template") # output image name, usually same as repo name, change as needed
 export default_tag := env("DEFAULT_TAG", "latest")
-export default_gpu_profile := env("GPU_PROFILE", "none")
+export default_image_flavor := env("IMAGE_FLAVOR", "main")
+export default_akmods_flavor := env("AKMODS_FLAVOR", "main")
 export bib_image := env("BIB_IMAGE", "quay.io/centos-bootc/bootc-image-builder:latest")
 
 alias build-vm := build-qcow2
@@ -87,14 +88,15 @@ sudoif command *args:
 #
 
 # Build the image using the specified parameters
-build $target_image=image_name $tag=default_tag $gpu_profile=default_gpu_profile:
+build $target_image=image_name $tag=default_tag $image_flavor=default_image_flavor:
     #!/usr/bin/env bash
 
     BUILD_ARGS=()
     if [[ -z "$(git status -s)" ]]; then
         BUILD_ARGS+=("--build-arg" "SHA_HEAD_SHORT=$(git rev-parse --short HEAD)")
     fi
-    BUILD_ARGS+=("--build-arg" "GPU_PROFILE={{ gpu_profile }}")
+    BUILD_ARGS+=("--build-arg" "IMAGE_FLAVOR={{ image_flavor }}")
+    BUILD_ARGS+=("--build-arg" "AKMODS_FLAVOR={{ image_flavor }}")
 
     podman build \
         "${BUILD_ARGS[@]}" \
@@ -103,7 +105,7 @@ build $target_image=image_name $tag=default_tag $gpu_profile=default_gpu_profile
         .
 
 [group('Build Container Image')]
-build-nvidia $target_image=image_name $tag=(default_tag + "-nvidia"):
+build-nvidia-open $target_image=image_name $tag=(default_tag + "-nvidia"):
     just build "{{ target_image }}" "{{ tag }}" "nvidia-open"
 
 # Command: _rootful_load_image
@@ -201,11 +203,11 @@ _build-bib $target_image $tag $type $config: (_rootful_load_image target_image t
 #   config: The configuration file to use for the build (deafult: disk_config/disk.toml)
 
 # Example: just _rebuild-bib localhost/fedora latest qcow2 disk_config/disk.toml
-_rebuild-bib $target_image $tag $type $config $gpu_profile:
+_rebuild-bib $target_image $tag $type $config $image_flavor:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    just build "{{ target_image }}" "{{ tag }}" "{{ gpu_profile }}"
+    just build "{{ target_image }}" "{{ tag }}" "{{ image_flavor }}"
     just _build-bib "{{ target_image }}" "{{ tag }}" "{{ type }}" "{{ config }}"
 
 # Build a QCOW2 virtual machine image
@@ -222,18 +224,18 @@ build-iso $target_image=("localhost/" + image_name) $tag=default_tag: && (_build
 
 # Rebuild a QCOW2 virtual machine image
 [group('Build Virtal Machine Image')]
-rebuild-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag $gpu_profile=default_gpu_profile:
-    just _rebuild-bib "{{ target_image }}" "{{ tag }}" "qcow2" "disk_config/disk.toml" "{{ gpu_profile }}"
+rebuild-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag $image_flavor=default_image_flavor:
+    just _rebuild-bib "{{ target_image }}" "{{ tag }}" "qcow2" "disk_config/disk.toml" "{{ image_flavor }}"
 
 # Rebuild a RAW virtual machine image
 [group('Build Virtal Machine Image')]
-rebuild-raw $target_image=("localhost/" + image_name) $tag=default_tag $gpu_profile=default_gpu_profile:
-    just _rebuild-bib "{{ target_image }}" "{{ tag }}" "raw" "disk_config/disk.toml" "{{ gpu_profile }}"
+rebuild-raw $target_image=("localhost/" + image_name) $tag=default_tag $image_flavor=default_image_flavor:
+    just _rebuild-bib "{{ target_image }}" "{{ tag }}" "raw" "disk_config/disk.toml" "{{ image_flavor }}"
 
 # Rebuild an ISO virtual machine image
 [group('Build Virtal Machine Image')]
-rebuild-iso $target_image=("localhost/" + image_name) $tag=default_tag $gpu_profile=default_gpu_profile:
-    just _rebuild-bib "{{ target_image }}" "{{ tag }}" "iso" "disk_config/iso.toml" "{{ gpu_profile }}"
+rebuild-iso $target_image=("localhost/" + image_name) $tag=default_tag $image_flavor=default_image_flavor:
+    just _rebuild-bib "{{ target_image }}" "{{ tag }}" "iso" "disk_config/iso.toml" "{{ image_flavor }}"
 
 # Run a virtual machine with the specified image type and configuration
 _run-vm $target_image $tag $type $config:

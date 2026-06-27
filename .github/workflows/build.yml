@@ -27,18 +27,15 @@ concurrency:
 
 jobs:
   build_push:
-    name: Build and push image (${{ matrix.profile.name }})
+    name: Build and push image (${{ matrix.flavor.name }})
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        profile:
-          - name: neutral
-            gpu_profile: none
+        flavor:
+          - name: main
+            image_flavor: main
             default_tag: latest
-          - name: nvidia-open
-            gpu_profile: nvidia-open
-            default_tag: latest-nvidia
 
     permissions:
       contents: read
@@ -51,7 +48,7 @@ jobs:
           # Lowercase the image uri
           echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> ${GITHUB_ENV}
           echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
-          echo "DEFAULT_TAG=${{ matrix.profile.default_tag }}" >> ${GITHUB_ENV}
+          echo "DEFAULT_TAG=${{ matrix.flavor.default_tag }}" >> ${GITHUB_ENV}
 
       # These stage versions are pinned by https://github.com/renovatebot/renovate
       - name: Checkout
@@ -115,7 +112,8 @@ jobs:
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
           build-args: |
-            GPU_PROFILE=${{ matrix.profile.gpu_profile }}
+            IMAGE_FLAVOR=${{ matrix.flavor.image_flavor }}
+            AKMODS_FLAVOR=${{ matrix.flavor.image_flavor }}
           oci: false
 
       # Rechunk is a script that we use on Universal Blue to make sure there isnt a single huge layer when your image gets published.
