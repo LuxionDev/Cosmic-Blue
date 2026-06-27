@@ -37,7 +37,16 @@ case "${IMAGE_FLAVOR}" in
         command -v nvidia-smi >/dev/null 2>&1 && { echo "Unexpected NVIDIA userspace artifact present: nvidia-smi" >&2; exit 1; }
         ;;
     nvidia-open)
-        echo "NVIDIA flavor validation is pending Bluefin-style akmods integration." >&2
+        NVIDIA_PACKAGES=(
+            libnvidia-container-tools
+            kmod-nvidia
+            nvidia-driver-cuda
+        )
+
+        for pkg in "${NVIDIA_PACKAGES[@]}"; do
+            rpm -q "${pkg}" >/dev/null 2>&1 || { echo "Expected NVIDIA package missing: ${pkg}" >&2; exit 1; }
+        done
+
         command -v nvidia-smi >/dev/null 2>&1 || { echo "Expected NVIDIA userspace artifact missing: nvidia-smi" >&2; exit 1; }
         ;;
     *)
