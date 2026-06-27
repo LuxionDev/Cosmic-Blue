@@ -36,6 +36,9 @@ jobs:
           - name: main
             image_flavor: main
             default_tag: latest
+          - name: nvidia-open
+            image_flavor: nvidia-open
+            default_tag: latest
 
     permissions:
       contents: read
