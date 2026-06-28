@@ -10,8 +10,6 @@ AKMODS_FLAVOR="${AKMODS_FLAVOR:-main}"
 BASE_IMAGE_NAME="${BASE_IMAGE_NAME:-base}"
 UBLUE_IMAGE_TAG="${UBLUE_IMAGE_TAG:-latest}"
 KERNEL="${KERNEL:-}"
-FEDORA_MAJOR_VERSION="${FEDORA_MAJOR_VERSION:-$(rpm -E %fedora)}"
-RPMFUSION_RELEASE_VERSION="${RPMFUSION_RELEASE_VERSION:-3}"
 
 extract_rpm_layer() {
     local image_dir="$1"
@@ -68,8 +66,8 @@ case "${IMAGE_FLAVOR}" in
         fi
 
         dnf5 -y install \
-            "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${FEDORA_MAJOR_VERSION}-${RPMFUSION_RELEASE_VERSION}.noarch.rpm" \
-            "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${FEDORA_MAJOR_VERSION}-${RPMFUSION_RELEASE_VERSION}.noarch.rpm"
+            "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" \
+            "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
 
         skopeo copy --retry-times 3 "docker://ghcr.io/ublue-os/akmods-nvidia-open:${AKMODS_FLAVOR}-$(rpm -E %fedora)-${KERNEL}" dir:/tmp/akmods-rpms
         extract_rpm_layer /tmp/akmods-rpms /tmp/akmods-rpms
