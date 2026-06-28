@@ -20,9 +20,8 @@ case "${IMAGE_FLAVOR}" in
         ;;
     nvidia-open)
         echo "IMAGE_FLAVOR=nvidia-open selected."
-        echo "Bluefin-style NVIDIA integration is not implemented on this branch yet."
-        echo "Expected future path: consume akmods inputs via AKMODS_FLAVOR=${AKMODS_FLAVOR}, not direct dnf package installation." >&2
-        exit 1
+        echo "NVIDIA flavor payload was applied in 03-install-kernel-akmods.sh."
+        echo "No additional flavor-stage changes required."
         ;;
     *)
         echo "Unsupported IMAGE_FLAVOR: ${IMAGE_FLAVOR}" >&2
