@@ -15,11 +15,14 @@ extract_rpm_layer() {
     local image_dir="$1"
     local target_dir="$2"
     local layer_digest
+    local tmp_extract
 
     layer_digest=$(jq -r '.layers[].digest' < "${image_dir}/manifest.json" | cut -d : -f 2)
-    tar -xvzf "${image_dir}/${layer_digest}" -C /tmp/
+    tmp_extract=$(mktemp -d /tmp/akmods-layer.XXXXXX)
+    tar -xvzf "${image_dir}/${layer_digest}" -C "${tmp_extract}"
     mkdir -p "${target_dir}"
-    mv /tmp/rpms/* "${target_dir}/"
+    cp -a "${tmp_extract}/." "${target_dir}/"
+    rm -rf "${tmp_extract}"
 }
 
 case "${IMAGE_FLAVOR}" in
@@ -43,8 +46,10 @@ case "${IMAGE_FLAVOR}" in
             rpm --erase "${pkg}" --nodeps || true
         done
 
+        rm -rf /tmp/akmods /tmp/akmods-rpms /tmp/kernel-rpms
+
         skopeo copy --retry-times 3 "docker://ghcr.io/ublue-os/akmods:${AKMODS_FLAVOR}-$(rpm -E %fedora)-${KERNEL}" dir:/tmp/akmods
-        extract_rpm_layer /tmp/akmods /tmp/akmods/rpms
+        extract_rpm_layer /tmp/akmods /tmp
 
         dnf5 -y install \
             /tmp/kernel-rpms/kernel-[0-9]*.rpm \
@@ -65,7 +70,7 @@ case "${IMAGE_FLAVOR}" in
             https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-"$(rpm -E %fedora)".noarch.rpm
 
         skopeo copy --retry-times 3 "docker://ghcr.io/ublue-os/akmods-nvidia-open:${AKMODS_FLAVOR}-$(rpm -E %fedora)-${KERNEL}" dir:/tmp/akmods-rpms
-        extract_rpm_layer /tmp/akmods-rpms /tmp/akmods-rpms/rpms
+        extract_rpm_layer /tmp/akmods-rpms /tmp/akmods-rpms
 
         IMAGE_NAME="${BASE_IMAGE_NAME}" AKMODNV_PATH="/tmp/akmods-rpms" MULTILIB=0 /tmp/akmods-rpms/ublue-os/nvidia-install.sh
 
