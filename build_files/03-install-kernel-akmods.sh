@@ -72,7 +72,7 @@ case "${IMAGE_FLAVOR}" in
         skopeo copy --retry-times 3 "docker://ghcr.io/ublue-os/akmods-nvidia-open:${AKMODS_FLAVOR}-$(rpm -E %fedora)-${KERNEL}" dir:/tmp/akmods-rpms
         extract_rpm_layer /tmp/akmods-rpms /tmp/akmods-rpms
 
-        IMAGE_NAME="${BASE_IMAGE_NAME}" AKMODNV_PATH="/tmp/akmods-rpms" MULTILIB=0 /tmp/akmods-rpms/ublue-os/nvidia-install.sh
+        IMAGE_NAME="${BASE_IMAGE_NAME}" AKMODNV_PATH="/tmp/akmods-rpms/rpms" MULTILIB=0 /tmp/akmods-rpms/rpms/ublue-os/nvidia-install.sh
 
         rm -f /usr/share/vulkan/icd.d/nouveau_icd.*.json
         ln -sf libnvidia-ml.so.1 /usr/lib64/libnvidia-ml.so
