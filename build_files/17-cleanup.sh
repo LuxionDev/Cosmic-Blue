@@ -16,6 +16,10 @@ rm -rf /var/lib/containers
 
 # Remove generated files that should not be baked into the image.
 rm -f /var/lib/xkb/README.compiled
-rm -rf /var/lib/greetd/.config/systemd/user
+rm -rf /run/tuned
+rm -rf /var/lib/fprint
+rm -rf /var/lib/greetd/.config
+rm -rf /var/lib/rpm-state
+rm -rf /var/lib/tuned
 
 echo "::endgroup::"
