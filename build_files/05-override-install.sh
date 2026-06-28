@@ -10,7 +10,8 @@ set -ouex pipefail
 TMPDIR="$(mktemp -d /tmp/starship.XXXXXX)"
 trap 'rm -rf "${TMPDIR}"' EXIT
 
-STARSHIP_URL="https://github.com/starship/starship/releases/latest/download/starship-x86_64-unknown-linux-gnu.tar.gz"
+STARSHIP_VERSION="v1.26.0"
+STARSHIP_URL="https://github.com/starship/starship/releases/download/${STARSHIP_VERSION}/starship-x86_64-unknown-linux-gnu.tar.gz"
 ARCHIVE_PATH="${TMPDIR}/starship.tar.gz"
 
 if command -v ghcurl >/dev/null 2>&1; then
