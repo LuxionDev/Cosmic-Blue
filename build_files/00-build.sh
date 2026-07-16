@@ -5,10 +5,11 @@ echo "::group:: ===$(basename "$0")==="
 set -ouex pipefail
 
 # Keep stage ordering explicit and easy to review.
+/usr/bin/bash /ctx/03-install-kernel-akmods.sh
 /usr/bin/bash /ctx/04-packages.sh
 /usr/bin/bash /ctx/05-override-install.sh
 /usr/bin/bash /ctx/07-cosmic.sh
-/usr/bin/bash /ctx/08-nvidia.sh
+/usr/bin/bash /ctx/08-flavor.sh
 /usr/bin/bash /ctx/10-system-config.sh
 /usr/bin/bash /ctx/17-cleanup.sh
 

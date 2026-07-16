@@ -7,7 +7,13 @@ COPY scripts /scripts
 # Base Image
 FROM ghcr.io/ublue-os/base-main:latest
 
-ARG GPU_PROFILE=none
+ARG BASE_IMAGE_NAME="base-main"
+ARG FEDORA_MAJOR_VERSION=""
+ARG IMAGE_NAME="cosmic-blue"
+ARG IMAGE_FLAVOR=main
+ARG AKMODS_FLAVOR=main
+ARG KERNEL=""
+ARG UBLUE_IMAGE_TAG="latest"
 
 ## Other possible base images include:
 # FROM ghcr.io/ublue-os/bazzite:latest
@@ -37,7 +43,14 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=cache,dst=/var/log \
     --mount=type=tmpfs,dst=/tmp \
-    GPU_PROFILE="${GPU_PROFILE}" /usr/bin/bash /ctx/00-build.sh
+    BASE_IMAGE_NAME="${BASE_IMAGE_NAME}" \
+    FEDORA_MAJOR_VERSION="${FEDORA_MAJOR_VERSION}" \
+    IMAGE_NAME="${IMAGE_NAME}" \
+    IMAGE_FLAVOR="${IMAGE_FLAVOR}" \
+    AKMODS_FLAVOR="${AKMODS_FLAVOR}" \
+    KERNEL="${KERNEL}" \
+    UBLUE_IMAGE_TAG="${UBLUE_IMAGE_TAG}" \
+    /usr/bin/bash /ctx/00-build.sh
     
 ### LINTING
 ## Verify final image and contents are correct.

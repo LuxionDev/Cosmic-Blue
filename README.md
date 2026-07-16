@@ -184,25 +184,29 @@ To use it, you must have installed [just](https://just.systems/man/en/introducti
 Builds a container image using Podman.
 
 ```bash
-just build $target_image $tag $gpu_profile
+just build $target_image $tag $image_flavor
 ```
 
 Arguments:
 - `$target_image`: The tag you want to apply to the image (default: `$image_name`).
 - `$tag`: The tag for the image (default: `$default_tag`).
-- `$gpu_profile`: GPU profile selector (default: `none`, supported: `none`, `nvidia-open`).
+- `$image_flavor`: Image flavor selector (default: `main`, current supported build path: `main`).
 
-Example NVIDIA build:
+Flavor naming follows the Bluefin-style pattern:
+- `main` builds and publishes as the base image name
+- non-`main` flavors build and publish as `<image-name>-<flavor>`
 
-```bash
-just build localhost/image-template latest-nvidia nvidia-open
-```
-
-Convenience wrapper:
+Current default build:
 
 ```bash
-just build-nvidia
+just build localhost/image-template latest main
 ```
+
+Planned NVIDIA flavor work:
+
+`nvidia-open` is being refactored toward a Bluefin-style flavor and akmods-based integration path. The old direct package-install implementation has been removed from this branch because it did not match the upstream model and failed in CI.
+
+The branch now mirrors Bluefin's stage ordering more closely by reserving a kernel/akmods stage before package layering. The actual akmods container consumption for `nvidia-open` is still pending.
 
 ## Building and Running Virtual Machines and ISOs
 

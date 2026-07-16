@@ -27,18 +27,18 @@ concurrency:
 
 jobs:
   build_push:
-    name: Build and push image (${{ matrix.profile.name }})
+    name: Build and push image (${{ matrix.flavor.name }})
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        profile:
-          - name: neutral
-            gpu_profile: none
+        flavor:
+          - name: main
+            image_flavor: main
             default_tag: latest
           - name: nvidia-open
-            gpu_profile: nvidia-open
-            default_tag: latest-nvidia
+            image_flavor: nvidia-open
+            default_tag: latest
 
     permissions:
       contents: read
@@ -51,7 +51,34 @@ jobs:
           # Lowercase the image uri
           echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> ${GITHUB_ENV}
           echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
-          echo "DEFAULT_TAG=${{ matrix.profile.default_tag }}" >> ${GITHUB_ENV}
+          echo "DEFAULT_TAG=${{ matrix.flavor.default_tag }}" >> ${GITHUB_ENV}
+          if [[ "${{ matrix.flavor.image_flavor }}" == "main" ]]; then
+            echo "IMAGE_NAME_FULL=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
+            echo "KERNEL=" >> ${GITHUB_ENV}
+          else
+            echo "IMAGE_NAME_FULL=${IMAGE_NAME,,}-${{ matrix.flavor.image_flavor }}" >> ${GITHUB_ENV}
+          fi
+
+      - name: Resolve upstream build inputs
+        run: |
+          if [[ "${{ matrix.flavor.image_flavor }}" == "main" ]]; then
+            AKMODS_FLAVOR=main
+          elif [[ "${DEFAULT_TAG}" =~ stable ]]; then
+            AKMODS_FLAVOR=coreos-stable
+          elif [[ "${DEFAULT_TAG}" =~ beta ]]; then
+            AKMODS_FLAVOR=main
+          else
+            AKMODS_FLAVOR=main
+          fi
+          echo "AKMODS_FLAVOR=${AKMODS_FLAVOR}" >> ${GITHUB_ENV}
+
+          FEDORA_MAJOR_VERSION=$(skopeo inspect --retry-times 3 docker://ghcr.io/ublue-os/base-main:${DEFAULT_TAG} | jq -r '.Labels["org.opencontainers.image.version"]' | grep -oP '^[0-9]+')
+          echo "FEDORA_MAJOR_VERSION=${FEDORA_MAJOR_VERSION}" >> ${GITHUB_ENV}
+
+          if [[ "${{ matrix.flavor.image_flavor }}" != "main" ]]; then
+            KERNEL=$(skopeo inspect --retry-times 3 docker://ghcr.io/ublue-os/akmods:${AKMODS_FLAVOR}-${FEDORA_MAJOR_VERSION} | jq -r '.Labels["ostree.linux"]')
+            echo "KERNEL=${KERNEL}" >> ${GITHUB_ENV}
+          fi
 
       # These stage versions are pinned by https://github.com/renovatebot/renovate
       - name: Checkout
@@ -111,11 +138,16 @@ jobs:
             ./Containerfile
           # Postfix image name with -custom to make it a little more descriptive
           # Syntax: https://docs.github.com/en/actions/learn-github-actions/expressions#format
-          image: ${{ env.IMAGE_NAME }}
+          image: ${{ env.IMAGE_NAME_FULL }}
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
           build-args: |
-            GPU_PROFILE=${{ matrix.profile.gpu_profile }}
+            IMAGE_FLAVOR=${{ matrix.flavor.image_flavor }}
+            AKMODS_FLAVOR=${{ env.AKMODS_FLAVOR }}
+            FEDORA_MAJOR_VERSION=${{ env.FEDORA_MAJOR_VERSION }}
+            IMAGE_NAME=${{ env.IMAGE_NAME_FULL }}
+            KERNEL=${{ env.KERNEL }}
+            UBLUE_IMAGE_TAG=${{ env.DEFAULT_TAG }}
           oci: false
 
       # Rechunk is a script that we use on Universal Blue to make sure there isnt a single huge layer when your image gets published.
@@ -161,7 +193,7 @@ jobs:
           REGISTRY_PASSWORD: ${{ github.token }}
         with:
           registry: ${{ env.IMAGE_REGISTRY }}
-          image: ${{ env.IMAGE_NAME }}
+          image: ${{ env.IMAGE_NAME_FULL }}
           tags: ${{ steps.metadata.outputs.tags }}
           username: ${{ env.REGISTRY_USER }}
           password: ${{ env.REGISTRY_PASSWORD }}
@@ -179,7 +211,7 @@ jobs:
       - name: Sign container image
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         run: |
-          IMAGE_FULL="${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
+          IMAGE_FULL="${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME_FULL }}"
           for tag in ${{ steps.metadata.outputs.tags }}; do
             cosign sign -y --key env://COSIGN_PRIVATE_KEY $IMAGE_FULL:$tag
           done
